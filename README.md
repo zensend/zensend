@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/zensend/zensend_go_api.svg?branch=master)](https://travis-ci.org/zensend/zensend_go_api)
 # ZenSend API for Go
 
 ## Installation
