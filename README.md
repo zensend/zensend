@@ -2,7 +2,9 @@
 # ZenSend API for Go
 
 ## Installation
-TODO...
+
+go get github.com/zensend/zensend
+go install github.com/zensend/zensend
 
 ## Examples
 First, make sure you import the zensend package
