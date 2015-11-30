@@ -3,8 +3,8 @@
 
 ## Installation
 
-go get github.com/zensend/zensend
-go install github.com/zensend/zensend
+    go get github.com/zensend/zensend
+    go install github.com/zensend/zensend
 
 ## Examples
 First, make sure you import the zensend package
