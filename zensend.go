@@ -10,12 +10,14 @@ import (
 
 const (
 	URL = "https://api.zensend.io"
+	VERIFY_URL = "https://verify.zensend.io"
 )
 
 type Client struct {
 	APIKey     string
 	HTTPClient *http.Client
 	URL        string
+	VerifyURL  string
 }
 
 func New(APIKey string) *Client {
@@ -23,7 +25,12 @@ func New(APIKey string) *Client {
 }
 
 func NewWithURL(APIKey string, URL string) *Client {
-	return &Client{APIKey: APIKey, HTTPClient: &http.Client{}, URL: URL}
+	return NewWithURLAndVerifyURL(APIKey, URL, VERIFY_URL)
+	
+}
+
+func NewWithURLAndVerifyURL(APIKey string, URL string, VerifyURL string) *Client {
+	return &Client{APIKey: APIKey, HTTPClient: &http.Client{}, URL: URL, VerifyURL: VerifyURL}
 }
 
 type zenSendSendSMSResponse struct {
@@ -46,6 +53,16 @@ type zenSendGetPricesResponse struct {
 	Failure *failure
 }
 
+type zenSendCreateMsisdnVerificationResponse struct {
+	Success *createMsisdnVerificationResponse
+	Failure *failure
+}
+
+type zenSendMsisdnVerificationStatusResponse struct {
+	Success *msisdnVerificationStatusResponse
+	Failure *failure
+}
+
 type getPricesResponse struct {
 	PricesInPence map[string]float64 `json:"prices_in_pence"`
 }
@@ -54,12 +71,68 @@ type checkBalanceResponse struct {
 	Balance float64
 }
 
+type createMsisdnVerificationResponse struct {
+	Session string
+}
+
+type msisdnVerificationStatusResponse struct {
+	Msisdn string
+}
+
 type failure struct {
 	FailCode  string
 	Parameter string
 
 	CostInPence       *float64 `json:"cost_in_pence"`
 	NewBalanceInPence *float64 `json:"new_balance_in_pence"`
+}
+
+func (c *Client) MsisdnVerificationStatus(session string) (string, error) {
+	msisdnVerificationStatusResponse := &zenSendMsisdnVerificationStatusResponse{};
+
+	httpStatus, requestError := c.makeRequest(msisdnVerificationStatusResponse, c.VerifyURL + "/api/msisdn_verify?SESSION=" + url.QueryEscape(session), nil)
+
+	if requestError != nil {
+		return "", requestError
+	}
+
+	if msisdnVerificationStatusResponse.Success != nil {
+		return msisdnVerificationStatusResponse.Success.Msisdn, nil
+	}
+
+	return "", createError(msisdnVerificationStatusResponse.Failure, httpStatus)
+
+}
+
+func (c *Client) CreateMsisdnVerification(number string) (string, error) {
+	return c.CreateMsisdnVerificationWithOptions(number, VerifyOptions{})
+}
+
+func (c *Client) CreateMsisdnVerificationWithOptions(number string, options VerifyOptions) (string, error) {
+	createMsisdnVerificationResponse := &zenSendCreateMsisdnVerificationResponse{};
+
+	postParams := url.Values{}
+	postParams.Set("NUMBER", number)
+	if len(options.Originator) > 0 {
+		postParams.Set("ORIGINATOR", options.Originator)
+	}
+
+	if len(options.Message) > 0 {
+		postParams.Set("MESSAGE", options.Message)
+	}
+
+	httpStatus, requestError := c.makeRequest(createMsisdnVerificationResponse, c.VerifyURL + "/api/msisdn_verify", postParams)
+
+	if requestError != nil {
+		return "", requestError
+	}
+
+	if createMsisdnVerificationResponse.Success != nil {
+		return createMsisdnVerificationResponse.Success.Session, nil
+	}
+
+	return "", createError(createMsisdnVerificationResponse.Failure, httpStatus)
+
 }
 
 func (c *Client) CheckBalance() (float64, error) {

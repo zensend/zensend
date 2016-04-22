@@ -37,7 +37,7 @@ func StubHttpResponseAndTest(statusCode int, stubbedResponse string, f func(clie
 
 	httpClient := &http.Client{Transport: transport}
 
-	f(Client{APIKey: "API KEY", HTTPClient: httpClient, URL: "http://localhost:8084"})
+	f(Client{APIKey: "API KEY", HTTPClient: httpClient, URL: "http://localhost:8084", VerifyURL: "http://localhost:8084"})
 	return lastRequest
 }
 
@@ -198,4 +198,41 @@ func TestSendCheckBalanceFailure(t *testing.T) {
 		assert.NotNil(t, error)
 		assert.Equal(t, ZenSendError{StatusCode: 500, FailCode: "", Parameter: ""}, error)
 	})
+}
+
+func TestCreateMsisdnVerification(t *testing.T) {
+	stubbedResponse := `{"success": {"session": "SESSION"}}`
+	request := StubHttpResponseAndTest(200, stubbedResponse, func(client Client) {
+		session, error := client.CreateMsisdnVerificationWithOptions("441234567890", VerifyOptions{})
+
+		assert.Nil(t, error)
+		assert.Equal(t, "SESSION", session)
+	})
+
+	assert.Equal(t, request.Form.Encode(), "NUMBER=441234567890")	
+}
+
+func TestCreateMsisdnVerificationWithOptions(t *testing.T) {
+	stubbedResponse := `{"success": {"session": "SESSION"}}`
+	request := StubHttpResponseAndTest(200, stubbedResponse, func(client Client) {
+		session, error := client.CreateMsisdnVerificationWithOptions("441234567890", VerifyOptions{Message: "MSG", Originator: "ORIG"})
+
+		assert.Nil(t, error)
+		assert.Equal(t, "SESSION", session)
+	})
+
+	assert.Equal(t, request.Form.Encode(), "MESSAGE=MSG&NUMBER=441234567890&ORIGINATOR=ORIG")	
+}
+
+
+func TestMsisdnVerificationStatus(t *testing.T) {
+	stubbedResponse := `{"success": {"msisdn": "441234567890"}}`
+	request := StubHttpResponseAndTest(200, stubbedResponse, func(client Client) {
+		msisdn, error := client.MsisdnVerificationStatus("SESS")
+
+		assert.Nil(t, error)
+		assert.Equal(t, "441234567890", msisdn)
+	})
+
+	assert.Equal(t, request.Form.Encode(), "SESSION=SESS")	
 }
