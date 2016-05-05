@@ -46,9 +46,16 @@ type zenSendGetPricesResponse struct {
 	Failure *failure
 }
 
+type zenSendCreateKeywordResponse struct {
+	Success *CreateKeywordResponse
+	Failure *failure
+}
+
 type getPricesResponse struct {
 	PricesInPence map[string]float64 `json:"prices_in_pence"`
 }
+
+
 
 type checkBalanceResponse struct {
 	Balance float64
@@ -130,6 +137,26 @@ func (c *Client) SendSMS(message *Message) (*SendSMSResponse, error) {
 	}
 	return nil, createError(sendSmsResponse.Failure, httpStatus)
 
+}
+
+func (c *Client) CreateKeyword(keywordRequest *CreateKeywordRequest) (*CreateKeywordResponse, error) {
+
+	createKeywordResponse := &zenSendCreateKeywordResponse{}
+
+	postParams := keywordRequest.toPostParams()
+
+
+	httpStatus, requestError := c.makeRequest(createKeywordResponse, c.URL + "/v3/keywords", postParams)
+
+	if requestError != nil {
+		return nil, requestError
+	}
+
+	if createKeywordResponse.Success != nil {
+		return createKeywordResponse.Success, nil
+	}
+
+	return nil, createError(createKeywordResponse.Failure, httpStatus)	
 }
 
 func createError(failure *failure, StatusCode int) ZenSendError {
