@@ -78,6 +78,14 @@ response, error := client.LookupOperator("441234567890")
 if error == nil {
   fmt.Printf("MCC: %s MNC: %s Operator: %s CostInPence: %f NewBalanceInPence: %f", response.MCC, response.MNC, response.Operator, response.CostInPence, response.NewBalanceInPence)
 } 
+
+### Create Sub Account
+```go
+response, error := client.CreateSubAccount("sub account name")
+if error == nil {
+  fmt.Printf("Name: %s Api Key: %s", response.Name, response.ApiKey)
+}
+```
   
 ### Testing using the REPL
 

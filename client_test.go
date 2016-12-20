@@ -63,6 +63,25 @@ func TestSendSMSSuccess(t *testing.T) {
 	assert.Equal(t, "BODY=This+is+a+test&NUMBERS=447877878787&ORIGINATOR=Originator", request.Form.Encode())
 }
 
+func TestCreateSubAccount(t *testing.T) {
+	stubbedResponse := `{"success": {"name":"Name","api_key":"ApiKey"}}`
+
+	request := StubHttpResponseAndTest(200, stubbedResponse, func(client Client) {
+		response, error := client.CreateSubAccount("Name")
+
+		correctResponse := &CreateSubAccountResponse{
+			Name:            "Name",
+			ApiKey:           "ApiKey",
+		}
+
+		assert.Nil(t, error)
+		assert.Equal(t, correctResponse, response)
+	})
+
+	assert.Equal(t, "NAME=Name", request.Form.Encode())
+}
+
+
 func TestOperatorLookupSuccess(t *testing.T) {
 	stubbedResponse := `{"success": {"mcc":"123","mnc":"456","operator":"o2-uk","cost_in_pence":2.5,"new_balance_in_pence":10.2}}`
 
