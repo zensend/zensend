@@ -46,6 +46,11 @@ type zenSendGetPricesResponse struct {
 	Failure *failure
 }
 
+type zenSendCreateSubAccountResponse struct {
+	Success *CreateSubAccountResponse
+	Failure *failure
+}
+
 type getPricesResponse struct {
 	PricesInPence map[string]float64 `json:"prices_in_pence"`
 }
@@ -108,6 +113,25 @@ func (c *Client) LookupOperator(number string) (*OperatorLookupResponse, error) 
 		return operatorLookupResponse.Success, nil
 	}
 	return nil, createError(operatorLookupResponse.Failure, httpStatus)
+}
+
+func (c *Client) CreateSubAccount(name string) (*CreateSubAccountResponse, error) {
+	createSubAccountResponse := &zenSendCreateSubAccountResponse{}
+
+	postParams := url.Values{}
+	postParams.Add("NAME", name)
+
+	httpStatus, requestError := c.makeRequest(createSubAccountResponse, c.URL+"/v3/sub_accounts", postParams)
+
+	if requestError != nil {
+		return nil, requestError
+	}
+
+	if createSubAccountResponse.Success != nil {
+		return createSubAccountResponse.Success, nil
+	}
+
+	return nil, createError(createSubAccountResponse.Failure, httpStatus)
 }
 
 func (c *Client) SendSMS(message *Message) (*SendSMSResponse, error) {
