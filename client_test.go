@@ -63,6 +63,56 @@ func TestSendSMSSuccess(t *testing.T) {
 	assert.Equal(t, "BODY=This+is+a+test&NUMBERS=447877878787&ORIGINATOR=Originator", request.Form.Encode())
 }
 
+func TestCreateKeyword(t *testing.T) {
+	stubbedResponse := `{"success": {"cost_in_pence":12.34,"new_balance_in_pence":10.2}}`
+
+
+	request := StubHttpResponseAndTest(200, stubbedResponse, func(client Client) {
+		request := &CreateKeywordRequest{
+			Shortcode: "SC",
+			Keyword: "KW",
+		}
+
+		response, error := client.CreateKeyword(request)
+
+		correctResponse := &CreateKeywordResponse{
+			CostInPence:       12.34,
+			NewBalanceInPence: 10.2,
+		}
+
+		assert.Nil(t, error)
+		assert.Equal(t, correctResponse, response)
+	})
+
+	assert.Equal(t, "IS_STICKY=false&KEYWORD=KW&SHORTCODE=SC", request.Form.Encode())
+}
+
+func TestCreateKeywordWithOptions(t *testing.T) {
+	stubbedResponse := `{"success": {"cost_in_pence":12.34,"new_balance_in_pence":10.2}}`
+
+
+	request := StubHttpResponseAndTest(200, stubbedResponse, func(client Client) {
+		request := &CreateKeywordRequest{
+			Shortcode: "SC",
+			Keyword: "KW",
+			MoUrl: "http://mo",
+			IsSticky: true,
+		}
+
+		response, error := client.CreateKeyword(request)
+
+		correctResponse := &CreateKeywordResponse{
+			CostInPence:       12.34,
+			NewBalanceInPence: 10.2,
+		}
+
+		assert.Nil(t, error)
+		assert.Equal(t, correctResponse, response)
+	})
+
+	assert.Equal(t, "IS_STICKY=true&KEYWORD=KW&MOURL=http%3A%2F%2Fmo&SHORTCODE=SC", request.Form.Encode())
+}
+
 func TestOperatorLookupSuccess(t *testing.T) {
 	stubbedResponse := `{"success": {"mcc":"123","mnc":"456","operator":"o2-uk","cost_in_pence":2.5,"new_balance_in_pence":10.2}}`
 
